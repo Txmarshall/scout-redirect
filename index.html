@@ -5,25 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <meta name="color-scheme" content="light dark">
-<title>Opening in Obsidian…</title>
+<title>Open this note in Obsidian</title>
 <script>
   // Scout deep-link shim:  ?v=<vault name>&f=<vault-relative note path, no .md>
-  // Hand off to obsidian:// ASAP (browsers won't follow a server 3xx to a custom scheme).
-  // IMPORTANT: do NOT close the tab here. On iOS Chrome window.close() succeeds and aborts
-  // the obsidian:// hand-off before the OS can switch apps. Closing is desktop-only, below.
+  // DESKTOP: auto hand-off (programmatic custom-scheme launch is reliable there).
+  // MOBILE: do NOT auto-launch — iOS/Chrome only honor a custom scheme from a real user
+  // gesture, so a programmatic launch is dropped (often without a prompt). The user taps
+  // the button below; that tap is the gesture that triggers the iOS "Open in Obsidian?" prompt.
   (function () {
     var q = new URLSearchParams(location.search);
     var v = q.get('v') || '', f = q.get('f') || '';
     if (!v || !f) return;
     var uri = 'obsidian://open?vault=' + encodeURIComponent(v) + '&file=' + encodeURIComponent(f);
-    location.replace(uri);
+    var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
+                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isMobile) { location.replace(uri); }
   })();
 </script>
 </head>
 <body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.5;padding:2rem;max-width:34rem;margin:0 auto;text-align:center;">
-<h2 id="hd" style="margin:0 0 .5rem;">Opening in Obsidian…</h2>
-<p id="msg">Handing off to Obsidian…</p>
-<p><a id="go" href="#" style="display:inline-block;font-size:1.05rem;padding:.6rem 1.1rem;border:1px solid currentColor;border-radius:8px;text-decoration:none;">Open in Obsidian</a></p>
+<h2 id="hd" style="margin:0 0 .5rem;">Open this note in Obsidian</h2>
+<p id="msg">Tap the button — iOS will ask to open Obsidian.</p>
+<p><a id="go" href="#" style="display:inline-block;font-size:1.1rem;padding:.7rem 1.3rem;border-radius:8px;background:#7c5cff;color:#fff;text-decoration:none;font-weight:600;">Open in Obsidian</a></p>
+<p style="color:#888;font-size:.85rem;margin-top:1.5rem;">Scout deep-link. This page stores nothing — it only forwards you to a note in your Obsidian vault.</p>
 <script>
   (function () {
     var q = new URLSearchParams(location.search);
@@ -36,22 +40,23 @@
       return;
     }
     var uri = 'obsidian://open?vault=' + encodeURIComponent(v) + '&file=' + encodeURIComponent(f);
+    // The button is a plain anchor whose href IS the obsidian:// URI — tapping it is the
+    // user-activated navigation iOS requires. No JS in the click path; nothing detaches the gesture.
     go.href = uri;
     go.textContent = 'Open “' + (f.split('/').pop() || 'note') + '” in Obsidian';
-    setTimeout(function () {
-      document.getElementById('hd').textContent = 'You can close this tab';
-      document.getElementById('msg').textContent = 'If Obsidian didn’t open, use the button below.';
-    }, 1000);
-    // Auto-close the leftover tab on DESKTOP ONLY. Mobile must stay alive so the obsidian://
-    // hand-off can complete — closing it on iOS aborts the open (that was the v3 bug).
+
     var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) ||
                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!isMobile) {
+      // Desktop already auto-handed-off in <head>; show the button as fallback and tidy the tab.
+      document.getElementById('hd').textContent = 'Opening in Obsidian…';
+      document.getElementById('msg').textContent = 'If nothing happened, tap the button. You can close this tab.';
       setTimeout(function () {
         try { window.open('', '_self'); window.close(); } catch (e) {}
         try { window.close(); } catch (e) {}
       }, 1200);
     }
+    // Mobile: no auto-launch, no auto-close — the explicit tap above does the work.
   })();
 </script>
 </body>
