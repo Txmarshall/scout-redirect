@@ -8,35 +8,47 @@
 <title>Opening in Obsidian…</title>
 <script>
   // Scout deep-link shim:  ?v=<vault name>&f=<vault-relative note path, no .md>
-  // Rebuild obsidian://open and hand off as fast as possible (a browser won't follow a
-  // server 3xx to a custom scheme, so we navigate via JS). Fire in <head> so the
-  // interstitial barely paints; if the OS can't take the scheme, the body's fallback shows.
+  // Hand off to obsidian:// ASAP (browsers won't follow a server 3xx to a custom scheme).
   (function () {
     var q = new URLSearchParams(location.search);
     var v = q.get('v') || '', f = q.get('f') || '';
     if (!v || !f) return;
     var uri = 'obsidian://open?vault=' + encodeURIComponent(v) + '&file=' + encodeURIComponent(f);
     location.replace(uri);
-    // Best-effort: dismiss this tab once we've handed off (works in some in-app browsers;
-    // a no-op in Safari tabs, which can't be closed by script — harmless either way).
-    setTimeout(function () { try { window.close(); } catch (e) {} }, 600);
+    setTimeout(function () { try { window.close(); } catch (e) {} }, 300);
   })();
 </script>
 </head>
 <body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.5;padding:2rem;max-width:34rem;margin:0 auto;text-align:center;">
-<h2 style="margin:0 0 .5rem;">Opening in Obsidian…</h2>
-<p id="msg">You can close this tab. If the note didn't open, tap below.</p>
+<h2 id="hd" style="margin:0 0 .5rem;">Opening in Obsidian…</h2>
+<p id="msg">Handing off to Obsidian…</p>
 <p><a id="go" href="#" style="display:inline-block;font-size:1.05rem;padding:.6rem 1.1rem;border:1px solid currentColor;border-radius:8px;text-decoration:none;">Open in Obsidian</a></p>
 <script>
-  // Populate the manual fallback button (runs after the inline redirect attempt).
   (function () {
     var q = new URLSearchParams(location.search);
     var v = q.get('v') || '', f = q.get('f') || '';
     var go = document.getElementById('go');
-    if (!v || !f) { document.getElementById('msg').textContent = 'Missing vault (v) or file (f) parameter.'; go.style.display = 'none'; return; }
+    if (!v || !f) {
+      document.getElementById('hd').textContent = 'Missing link parameters';
+      document.getElementById('msg').textContent = 'This link needs both a vault (v) and file (f).';
+      go.style.display = 'none';
+      return;
+    }
     var uri = 'obsidian://open?vault=' + encodeURIComponent(v) + '&file=' + encodeURIComponent(f);
     go.href = uri;
     go.textContent = 'Open “' + (f.split('/').pop() || 'note') + '” in Obsidian';
+    // Show a clear, closeable "done" state (desktop/iOS Chrome usually refuse a scripted close).
+    setTimeout(function () {
+      document.getElementById('hd').textContent = 'You can close this tab';
+      document.getElementById('msg').textContent = 'If Obsidian didn’t open, use the button below.';
+    }, 1000);
+    // Last-resort forced close. Chrome only lets a script close a window it opened, so this
+    // usually no-ops; window.open('','_self') re-acquires the window as the most aggressive try.
+    // If it neither closes nor reloads, the "you can close this tab" message remains.
+    setTimeout(function () {
+      try { window.open('', '_self'); window.close(); } catch (e) {}
+      try { window.close(); } catch (e) {}
+    }, 1500);
   })();
 </script>
 </body>
