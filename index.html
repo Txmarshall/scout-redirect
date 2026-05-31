@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="light dark">
+<title>Opening note in Obsidian…</title>
+</head>
+<body style="font-family:-apple-system,Segoe UI,Arial,sans-serif;line-height:1.5;padding:2rem;max-width:34rem;margin:0 auto;">
+<h2 style="margin:0 0 .5rem;">Opening in Obsidian…</h2>
+<p id="msg">If it doesn't open automatically, tap the button below.</p>
+<p><a id="go" href="#" style="display:inline-block;font-size:1.05rem;padding:.6rem 1rem;border:1px solid currentColor;border-radius:8px;text-decoration:none;">Open in Obsidian</a></p>
+<p style="color:#888;font-size:.85rem;margin-top:1.5rem;">Scout deep-link. This page stores nothing — it only forwards you to a note in your local Obsidian vault. Custom URL schemes (<code>obsidian://</code>) can't be sent directly in Outlook, so this https page relays the open request.</p>
+<script>
+  // Scout deep-link shim.  Query: ?v=<vault name>&f=<vault-relative path, no .md>
+  // A browser won't follow a server 3xx to a custom scheme, so we bounce via JS.
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var v = q.get('v') || '';
+    var f = q.get('f') || '';
+    if (!v || !f) {
+      document.getElementById('msg').textContent = 'Missing vault (v) or file (f) parameter.';
+      return;
+    }
+    // Re-encode for the obsidian:// URI (encodeURIComponent renders "/" as %2F, which Obsidian accepts).
+    var uri = 'obsidian://open?vault=' + encodeURIComponent(v) + '&file=' + encodeURIComponent(f);
+    var a = document.getElementById('go');
+    a.href = uri;
+    a.textContent = 'Open “' + (f.split('/').pop() || 'note') + '” in Obsidian';
+    // Auto-bounce shortly after paint so the manual fallback is ready if the OS can't handle the scheme.
+    setTimeout(function () { location.replace(uri); }, 250);
+  })();
+</script>
+</body>
+</html>
