@@ -1,0 +1,6 @@
+
+# Opt-in skills materialized by iqc-skills bootstrap (Step 4b). Regenerable
+# cache, not source -- canonical home is iqc-skills/opt-in-skills/.
+.claude/skills/review-csuite/
+.claude/skills/review-eng/
+.claude/skills/review-auto/
